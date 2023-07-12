@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<title>Texto a Voz</title>
+	<h2 class="center">Escribe lo que quieras, Raúl o Sabina lo leerán</h2>
+	<link rel="stylesheet" type="text/css" href="css/estilo.css">
+</head>
+<body>
+<div>
+  <input type="text" id="texto">
+  <input type="button" id="hablar" value="Enviar">
+  <label for="voz">Voz:</label>
+  
+    <!-- con esto las Opciones de voz se generan de una forma dinamica en el script.js -->
+      <center>
+
+      <select id="voz"></select>
+
+      </center>
+
+    <center>
+
+    <label for="velocidad">Velocidad:</label>
+
+  <input type="number" id="velocidad" step="0.1" min="0.1" max="10.0" value="1.0">
+
+    <label for="volumen">Volumen:</label>
+  <input type="range" id="volumen" min="0.1" max="1" step="0.01" value="0.1">
+
+
+    <label for="tonalidad">Tonalidad:</label>
+    <input type="range" id="tonalidad" min="0" max="2" step="0.01" value="1">
+
+  </center>
+  
+ 
+</div>
+<script src="js/script.js"></script>
+</body>
+</html>
+
+
+
+
+ 

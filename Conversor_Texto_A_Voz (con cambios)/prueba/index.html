@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Generar y descargar audios</title>
+</head>
+<body>
+  <label for="texto">Texto:</label>
+  <textarea id="texto" rows="4" cols="50"></textarea><br>
+
+  <label for="voz">Voz:</label>
+  <select id="voz">
+    <!-- Las opciones de voz se cargarán dinámicamente -->
+  </select><br>
+
+  <label for="velocidad">Velocidad:</label>
+  <input type="number" id="velocidad" step="0.1" min="0.1" max="10" value="1"><br>
+
+  <label for="volumen">Volumen:</label>
+  <input type="number" id="volumen" step="0.1" min="0" max="1" value="1"><br>
+
+  <label for="tonalidad">Tonalidad:</label>
+  <input type="number" id="tonalidad" step="0.1" min="0" max="2" value="1"><br>
+
+  <button id="hablar">Hablar</button>
+
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      const hablarBtn = document.getElementById('hablar');
+      const vozSelect = document.getElementById('voz');
+      let audioContext;
+
+      hablarBtn.addEventListener('click', () => {
+        const texto = document.getElementById('texto').value;
+        const vozSeleccionada = vozSelect.value;
+        const velocidad = parseFloat(document.getElementById('velocidad').value);
+        const volumen = parseFloat(document.getElementById('volumen').value);
+        const tonalidad = parseFloat(document.getElementById('tonalidad').value);
+
+        audioContext = new (window.AudioContext || window.webkitAudioContext)();
+        decir(texto, vozSeleccionada, velocidad, volumen, tonalidad);
+      });
+
+      speechSynthesis.onvoiceschanged = () => {
+        cargarVoces();
+      };
+
+      function cargarVoces() {
+        const voces = speechSynthesis.getVoices();
+
+        if (voces.length === 0) {
+          setTimeout(cargarVoces, 100);
+          return;
+        }
+
+        voces.forEach(voz => {
+          const opcion = document.createElement('option');
+          opcion.textContent = voz.name;
+          opcion.value = voz.name;
+          vozSelect.appendChild(opcion);
+        });
+      }
+
+      function decir(texto, vozSeleccionada, velocidad, volumen, tonalidad) {
+        const mensaje = new SpeechSynthesisUtterance(texto);
+
+        if (vozSeleccionada) {
+          const voces = speechSynthesis.getVoices();
+          const voz = voces.find(v => v.name === vozSeleccionada);
+          mensaje.voice = voz;
+        }
+
+        if (velocidad) {
+          mensaje.rate = velocidad;
+        }
+        if (volumen) {
+          mensaje.volume = volumen;
+        }
+
+        if (tonalidad) {
+          mensaje.pitch = tonalidad;
+        }
+
+        const mediaStream = new MediaStream();
+        const mediaStreamDestination = audioContext.createMediaStreamDestination();
+        mediaStream.addTrack(mediaStreamDestination.stream.getAudioTracks()[0]);
+
+        const mediaRecorder = new MediaRecorder(mediaStream);
+        const chunks = [];
+
+        mediaRecorder.ondataavailable = e => chunks.push(e.data);
+
+        mensaje.addEventListener('end', () => {
+          mediaRecorder.stop();
+          convertirAudio(new Blob(chunks));
+        });
+
+        mediaRecorder.start();
+
+        speechSynthesis.speak(mensaje);
+      }
+
+      function convertirAudio(blob) {
+        const formData = new FormData();
+        formData.append('audio', blob);
+
+        const xhr = new XMLHttpRequest();
+        xhr.open('POST', 'http://127.0.0.1:5500/index2.html', true);
+
+        xhr.onload = function() {
+          if (xhr.status === 200) {
+            const url = xhr.responseText;
+
+            const enlaceDescarga = document.createElement('a');
+            enlaceDescarga.href = url;
+            enlaceDescarga.download = 'audio.mp3';
+            enlaceDescarga.textContent = 'Descargar audio MP3';
+            document.body.appendChild(enlaceDescarga);
+          } else {
+            console.error('Error en la conversión del audio');
+          }
+        };
+
+        xhr.onerror = function() {
+          console.error('Error en la solicitud AJAX');
+        };
+
+        xhr.send(formData);
+      }
+    });
+  </script>
+</body>
+</html>
+
